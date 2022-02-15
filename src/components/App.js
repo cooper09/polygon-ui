@@ -7,6 +7,8 @@ import Web3 from 'web3';
 import Token from '../abis/Token.json';
 import SharedWallet from '../abis/SharedWallet.json';
 
+import Contract from '../abis/Contract.json';
+
 import {getAccountData} from '../helpers';
 
 class App extends Component {
@@ -56,26 +58,19 @@ class App extends Component {
     // We have our contract and the network its located on
     if (networkData) {
 
-      //const token = new web3.eth.Contract(Token.abi, networkData.address )
-      const token = new web3.eth.Contract(SharedWallet.abi, "0xB7B9914D5B825ac3B5e3B457Ea0702Cc90BFC82B" )
-      this.setState({token});
+      //cooper s - pull up our test contract
 
-      console.log("Our Token Contract: ", token.address )
-      this.setState({contractAddr: token.address})
-      
-      const tokenBalance = await token.methods.balanceOf().call()
-      console.log("Token Balance: ", tokenBalance.toString());
-    
-      this.setState({tokenBalance: window.web3.utils.fromWei(tokenBalance.toString(),'Ether')})
 
-    
+      const contract = new web3.eth.Contract(Contract, "0xc4c1b3255d3312f91128677fb699c48beff4a77e");
+      //console.log("New Contract: ", contract.methods )
+      this.setState({contract});
+      const contractBalance = await contract.methods.getBalance().call()
+      console.log("Contract Balance: ", contractBalance.toString());
+
+      this.setState({contractAddr: contract.address})
       //cooper s - Custom Token - can modify to any token I wish
-      let tokenName = await token.methods._owner().call()
-      console.log("contractName: ", tokenName.toString() )
-      this.setState({contractOwner: tokenName })
-
-
-      this.setState({loading: false})
+  
+      this.setState({loading: false});
     } else {
       window.alert("Smart contract not available on network: " + this.state.networkId )
     }
@@ -86,31 +81,24 @@ class App extends Component {
 async getBalance() {
   console.log("getBalance - current wallet balance: ", this.state.balance );
   console.log("getBalance - current contract balance: ", this.state.tokenBalance );
+  const newBalance = await this.state.contract.methods.getBalance().call()
+  console.log("Contract Balance: ", newBalance.toString());
+  this.setState({balance: newBalance.toString()})
 }//end getBalance
 
   async depositFunds ( amount) {
   console.log("Depositing Funds: ", amount );
-
-    
     try {
-      // cooper s - This is for the original COOP coin
-      //const done = await this.state.token.methods.deposit(amount ).send({from: this.state.account })
-      
-      // transfer dai token instead of coop coin
-      //const done = await this.state.daiToken.methods.transfer(recipient, amount ).send({from: this.state.account })
-      //if (!done) return
 
-      console.log("depositing: ", amount );
+      console.log("depositing  to : ", this.state.contract.address );
 
-      const done = await this.state.token.methods.deposit(amount).send({from: this.state.account })
-      console.log("deposit transaction  hash: ", done );
-      this.setState({txHash: done.blockHash })
-
-      const tokenBalance = await this.state.token.methods.balanceOf().call()
-     console.log("Token Balance: ", tokenBalance.toString())    
-      this.setState({tokenBalance: window.web3.utils.fromWei(tokenBalance.toString(),'Ether')})
-
-    //  alert("New Balance: "  + tokenBalance);
+      const receipt = await  this.state.contract.methods.depositIt().send({ 
+        from: this.state.contractOwner,
+        gas: 80000,
+        value: amount, 
+        }).then( (receipt) =>  {
+            console.log(`Transaction hash: ${receipt.transactionHash}`);
+        })
 
       console.log("I think we're done here...")
     }     
@@ -146,14 +134,15 @@ async getBalance() {
   render() {
     return (
       <div>
+        TEST
         <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
           <a
             className="navbar-brand col-sm-3 col-md-2 mr-0"
-            href="https://giddy.co"
+            href=""
             target="_blank"
             rel="noopener noreferrer"
           >
-            Giddy Tools
+            Crypto Tools
           </a>
         </nav>
         <div className="container-fluid mt-5">
@@ -161,19 +150,19 @@ async getBalance() {
             <main role="main" className="col-lg-12 d-flex text-center">
             <div className="content mr-auto ml-auto" style={{width: "350px"}}>
                 <a
-                  href="https://giddy.co/"
+                  href=""
                   target="_blank"
                   rel="noopener noreferrer"
-                >hoy 
+                > 
                   <img src={logo} width="25%" alt="logo" />
                 </a>
                 <br/><br/>
-                <h1>Shared Wallet</h1>
+                <h1>Polygon Shared Wallet</h1>
                 <br/>
                 <p>Please Enter the amount you would like to deposit<br/>
                 <code>(Polygon Mumbai</code> transactions only)</p>
                 <p>
-                <b>Current Balance:</b> {this.state.tokenBalance}  ETH <br/>
+                <b>Current Balance:</b> {this.state.balance}  ETH/MATIC <br/>
                 <button onClick={()=>this.getBalance()}>Check Balance</button><br/>
                 <b>Deposit Transaction Hash: </b> {this.state.txHash }<br/>  
                 <br/>
@@ -184,11 +173,7 @@ async getBalance() {
                   //  const recipient = this.recipient.value
                     const amount = window.web3.utils.toWei(this.amount.value);
                     console.log("Submitting amount: ", amount );
-                    //console.log("recipient: ", recipient," amount: ", amount );
-                    //this.transfer(recipient, amount)
 
-                    //this.recipient.value = "";
-                    //this.amount.value = "";
                   }}>
                   <div className="form-group mr-sm-2">
                     <input
