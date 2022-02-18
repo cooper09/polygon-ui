@@ -44,7 +44,7 @@ class App extends Component {
 
     this.setState({account: accountData.account });
     this.setState({accountName: accountData.accountName});
-    this.setState ({balance: window.web3.utils.fromWei(accountData.accountBalance)});
+    this.setState ({walletBalance: window.web3.utils.fromWei(accountData.accountBalance)});
     this.setState ({networkId: accountData.networkInfo.network} );
 
     // Identify which network we're on
@@ -67,7 +67,8 @@ class App extends Component {
       const contractBalance = await contract.methods.getBalance().call()
       console.log("Contract Balance: ", contractBalance.toString());
 
-      this.setState({contractBalance});
+      //this.setState ({walletBalance: window.web3.utils.fromWei(accountData.accountBalance)});
+      this.setState ({contractBalance: window.web3.utils.fromWei(contractBalance.toString())});
 
       const owner = await contract.methods.owner().call();
       console.log("Contract Owner: ", owner);
@@ -88,7 +89,8 @@ async getBalance() {
   console.log("getBalance - current wallet balance: ", this.state.balance );
   const newBalance = await this.state.contract.methods.getBalance().call()
   console.log("Contract Balance: ", newBalance.toString());
-  this.setState({contractBalance: newBalance.toString()})
+  //this.setState({contractBalance: newBalance.toString()})
+  this.setState ({contractBalance: window.web3.utils.fromWei(newBalance.toString())});
 }//end getBalance
 
   async depositFunds ( amount) {
@@ -97,12 +99,16 @@ async getBalance() {
 
       console.log("depositing  to : ", this.state.contract.address );
 
+      this.setState({loading: true});
+
       const receipt = await  this.state.contract.methods.depositIt().send({ 
         from: this.state.contractOwner,
         gas: 80000,
         value: amount, 
         }).then( (receipt) =>  {
             console.log(`Transaction hash: ${receipt.transactionHash}`);
+            this.setState({txHash: receipt.transactionHash} );
+            this.setState({loading: false});
         })
 
       console.log("I think we're done here...")
@@ -118,13 +124,14 @@ async getBalance() {
       super(props);
       this.state = {
         account: '',
+        walletBalance: 0,
         balance: 0,
         networkId: '',
         contract: {}, 
         contractOwner: 'Null',
         contractAddr: 'Null',
         token: null,
-        contractBalance: '',
+        contractBalance: 0,
         daiBalance:'',
         daiToken: null,
         transactions: [],
@@ -167,7 +174,7 @@ async getBalance() {
                 <p>Please Enter the amount you would like to deposit<br/>
                 <code>(Polygon Mumbai</code> transactions only)</p>
                 <p>
-                <b>Current Balance:</b> {this.state.balance}  ETH/MATIC <br/>
+                <b>Current Balance:</b> {this.state.contractBalance}  ETH/MATIC <br/>
                 <button onClick={()=>this.getBalance()}>Check Balance</button><br/>
                 <b>Deposit Transaction Hash: </b> {this.state.txHash }<br/>  
                 <br/>
@@ -177,7 +184,7 @@ async getBalance() {
                     event.preventDefault()
                   //  const recipient = this.recipient.value
                     const amount = window.web3.utils.toWei(this.amount.value);
-                    console.log("Withdrawing amount: ", amount );
+                    console.log("Depositing amount: ", amount );
 
                   }}>
                   <div className="form-group mr-sm-2">
@@ -202,14 +209,14 @@ async getBalance() {
                   <br/>
                   <b>Account:</b> {this.state.accountName} 
                   <br/>
-                  <b>MATIC Account Balance:</b> {this.state.balance }
+                  <b>MATIC Account Balance:</b> {this.state.walletBalance }
                   <br/>
                   <div>
                   <b>Contract Owner: </b> {this.state.contractOwner}
                   <br />
                   <b>Contract Address: </b> {this.state.contractAddr}
                   <br />
-                  <b>Contract Balance: </b> {this.state.balance}
+                  <b>Contract Balance: </b> {this.state.contractBalance}
                   <br />
                 </div>
             </div> 
