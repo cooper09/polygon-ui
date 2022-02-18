@@ -67,6 +67,12 @@ class App extends Component {
       const contractBalance = await contract.methods.getBalance().call()
       console.log("Contract Balance: ", contractBalance.toString());
 
+      this.setState({contractBalance});
+
+      const owner = await contract.methods.owner().call();
+      console.log("Contract Owner: ", owner);
+      this.setState({contractOwner: owner});
+
       this.setState({contractAddr: contract.address})
       //cooper s - Custom Token - can modify to any token I wish
   
@@ -80,10 +86,9 @@ class App extends Component {
 
 async getBalance() {
   console.log("getBalance - current wallet balance: ", this.state.balance );
-  console.log("getBalance - current contract balance: ", this.state.tokenBalance );
   const newBalance = await this.state.contract.methods.getBalance().call()
   console.log("Contract Balance: ", newBalance.toString());
-  this.setState({balance: newBalance.toString()})
+  this.setState({contractBalance: newBalance.toString()})
 }//end getBalance
 
   async depositFunds ( amount) {
@@ -119,7 +124,7 @@ async getBalance() {
         contractOwner: 'Null',
         contractAddr: 'Null',
         token: null,
-        tokenBalance: '',
+        contractBalance: '',
         daiBalance:'',
         daiToken: null,
         transactions: [],
@@ -172,7 +177,7 @@ async getBalance() {
                     event.preventDefault()
                   //  const recipient = this.recipient.value
                     const amount = window.web3.utils.toWei(this.amount.value);
-                    console.log("Submitting amount: ", amount );
+                    console.log("Withdrawing amount: ", amount );
 
                   }}>
                   <div className="form-group mr-sm-2">
@@ -203,6 +208,9 @@ async getBalance() {
                   <b>Contract Owner: </b> {this.state.contractOwner}
                   <br />
                   <b>Contract Address: </b> {this.state.contractAddr}
+                  <br />
+                  <b>Contract Balance: </b> {this.state.balance}
+                  <br />
                 </div>
             </div> 
               </div>

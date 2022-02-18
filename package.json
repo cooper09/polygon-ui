@@ -33,7 +33,7 @@
   "eslintConfig": {
     "extends": "react-app"
   },
-  "homepage": "http://sonyainc.net/sharedwallet/",
+  "homepage": "http://sonyainc.net/polybot/",
   "browserslist": [
     ">0.2%",
     "not dead",
